@@ -40,6 +40,29 @@ endif()
 set(LUA_SRC_PATH lua-${LUA_VERSION}/src)
 set(LUAJIT_SRC_PATH luajit-2.1.0b3/src)
 
+#begin lua-sqlite3
+	set (LSQLITE3_SRC lsqlite3/lsqlite3.c lsqlite3/sqlite3.c)
+	set_property(
+		SOURCE ${LSQLITE3_SRC}
+		APPEND
+		PROPERTY COMPILE_DEFINITIONS
+		LUA_LIB
+	)
+	list(APPEND THIRDPART_INC  lsqlite3)
+	set (THIRDPART_SRC ${THIRDPART_SRC} ${LSQLITE3_SRC})
+#end lua-sqlite3
+
+#begin protoc-gen-lua
+	set (PROTOGENLUA_SRC protobuf/pb.c)
+	set_property(
+		SOURCE ${PROTOGENLUA_SRC}
+		APPEND
+		PROPERTY COMPILE_DEFINITIONS
+		LUA_LIB
+	)
+	set (THIRDPART_SRC ${THIRDPART_SRC} ${PROTOGENLUA_SRC})
+#end protoc-gen-lua
+
 if (USING_LUAJIT)
 	
     if (APPLE AND NOT IOS AND NOT ANDROID)
@@ -144,6 +167,7 @@ source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} LUA_LIB)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} XLUA_CORE)
 
 if (APPLE)
+    ADD_DEFINITIONS(-DLUA_USE_MACOSX) #osx compile pb.c
     if (IOS)
         set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
         add_library(xlua STATIC
@@ -155,7 +179,7 @@ if (APPLE)
         )
 		set_xcode_property (xlua IPHONEOS_DEPLOYMENT_TARGET "7.0" "all")
     else ()
-        ADD_DEFINITIONS(-DLUA_USE_MACOSX) #osx platform emmylua debugger must have this option or can not load cpath
+        ADD_DEFINITIONS(-D_ALLBSD_SOURCE) #osx platform emmylua debugger must have this option or can not load cpath
         set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD_64_BIT)")
         add_library(xlua MODULE
             ${LUA_CORE}
